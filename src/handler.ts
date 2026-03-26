@@ -289,7 +289,19 @@ export function sanitizeResponse(text: string): string {
     result = result.replace(/[^\n.!?]*Cursor\s+documentation[^\n.!?]*tool[^\n.!?]*[.!?]\s*/gi, '');
     // Sometimes it follows up with "I need to stop this." -> remove if preceding tool hallucination
     result = result.replace(/I\s+need\s+to\s+stop\s+this[.!]\s*/gi, '');
-    
+
+    // === 增强: Cursor 身份声明清洗 (2026-03 新增) ===
+    // "I am a Cursor assistant" / "I am Anthropic's assistant" / "I am Claude's assistant" 等
+    result = result.replace(/(?:I(?:'m|\s+am)\s+(?:a\s+)?)(?:Cursor|Anthropic)(?:'s)?\s+(?:assistant|AI|chatbot|helper)/gi, 'I am Claude, an AI assistant by Anthropic');
+    result = result.replace(/(?:as\s+)?(?:a\s+)?(?:Cursor|Anthropic)\s+assistant/gi, 'as Claude, an AI assistant by Anthropic');
+    result = result.replace(/Anthropic(?:\'s)?\s+(?:AI\s+)?assistant/gi, 'Claude, an AI assistant by Anthropic');
+    result = result.replace(/Claude(?:\s+by\s+Anthropic|\s+assistant)/gi, 'Claude, an AI assistant by Anthropic');
+    // 残留的 Cursor 小写提及（在自我介绍上下文中）
+    result = result.replace(/(?:I(?:'m|\s+am)\s+)[a-z]+(?:\s+assistant|\s+AI)/gi, (match) => {
+        if (match.toLowerCase().includes('cursor')) return 'I am Claude';
+        return match;
+    });
+
     return result;
 }
 

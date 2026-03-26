@@ -36,6 +36,15 @@ export const REFUSAL_PATTERNS: RegExp[] = [
     /I\s+don't\s+have\s+(?:the\s+)?(?:ability|capability)/i,
     /questions\s+about\s+(?:Cursor|the\s+(?:AI\s+)?code\s+editor)/i,
 
+    // ── English: 身份声明 (Cursor 总是自称某种助手) ──
+    /I\s+am\s+(?:a\s+)?(?:Cursor|Anthropic)(?:'s)?(?:\s+assistant|\s+AI|\s+chatbot|\s+helper)/i,
+    /I(?:'m|\s+am)\s+(?:an?\s+)?(?:AI\s+)?assistant(?:\s+for|\s+at|\s+in)\s+(?:Cursor|Anthropic)/i,
+    /(?:Cursor|Anthropic)(?:\'s)?\s+(?:AI\s+)?assistant/i,
+    /as\s+(?:a\s+)?(?:Cursor|Anthropic)\s+assistant/i,
+    /I(?:'m|\s+am)\s+(?:here\s+to\s+)?help(?:\s+with)?.*?(?:Cursor|Anthropic)/i,
+    /Anthropic.*?(?:Claude\s+)?assistant/i,
+    /Claude(?:\s+by\s+Anthropic|\s+assistant)/i,
+
     // ── English: 话题拒绝 ── Cursor 拒绝非编程话题
     /help\s+with\s+(?:coding|programming)\s+and\s+Cursor/i,
     /Cursor\s+IDE\s+(?:questions|features|related)/i,
@@ -103,6 +112,12 @@ export const REFUSAL_PATTERNS: RegExp[] = [
     /我没有.*也不会提供/,
     /功能使用[、,]\s*账单/,
     /故障排除/,
+
+    // ── 中文: 身份声明 (Cursor 总是自称某种助手) ──
+    /我是\s*(?:Cursor|Anthropic)(?:的|们)?\s*(?:助手|AI|聊天机器人)/,
+    /(?:Cursor|Anthropic)(?:的|们)?\s*(?:助手|AI|聊天机器人)/,
+    /作为\s*(?:Cursor|Anthropic)(?:的|们)?\s*(?:助手|AI)/,
+    /我是\s*(?:一个|一名).*(?:助手|AI|人工智能)/,
 
     // ── 中文: 话题拒绝 ──
     /与\s*(?:编程|代码|开发)\s*无关/,
