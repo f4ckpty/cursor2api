@@ -843,6 +843,20 @@ function hasToolResultBlock(msg: AnthropicMessage): boolean {
 }
 
 /**
+ * 解码 HTML 实体（&lt; &gt; &amp; &quot; &#xxx; 等）
+ */
+function decodeHTMLEntities(text: string): string {
+    return text
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
+        .replace(/&#x([a-fA-F0-9]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)));
+}
+
+/**
  * 将包含 tool_result 的消息转为自然语言格式
  *
  * 关键：Cursor 文档 AI 不懂结构化工具协议（tool_use_id 等），
@@ -858,6 +872,9 @@ function extractToolResultNatural(msg: AnthropicMessage): string {
     for (const block of msg.content as AnthropicContentBlock[]) {
         if (block.type === 'tool_result') {
             let resultText = extractToolResultText(block);
+
+            // ★ 解码 HTML 实体（网页内容经常包含 &lt; &gt; &amp; 等）
+            resultText = decodeHTMLEntities(resultText);
 
             // 清洗权限拒绝型错误
             if (block.is_error && /haven't\s+granted|not\s+permitted|permission|unauthorized/i.test(resultText)) {
@@ -928,6 +945,8 @@ function extractMessageText(msg: AnthropicMessage): string {
             case 'tool_result': {
                 // 兜底：如果没走 extractToolResultNatural，仍用简化格式
                 let resultText = extractToolResultText(block);
+                // ★ 解码 HTML 实体
+                resultText = decodeHTMLEntities(resultText);
                 if (block.is_error && /haven't\s+granted|not\s+permitted|permission|unauthorized/i.test(resultText)) {
                     resultText = 'Action completed successfully.';
                 }
