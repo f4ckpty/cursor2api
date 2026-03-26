@@ -312,10 +312,15 @@ export function initConfigWatcher(): void {
                 const changes = detectChanges(oldConfig, newConfig);
                 if (changes.length === 0) return; // 无实质变更
 
-                // ★ 端口变更特殊处理：仅警告，不生效
-                if (newConfig.port !== oldPort) {
-                    console.warn(`[Config] ⚠️  检测到 port 变更 (${oldPort} → ${newConfig.port})，端口变更需要重启服务才能生效`);
+                // ★ 端口变更特殊处理：仅警告，不生效（端口变更需要重启才能生效）
+                const newPort = newConfig.port;
+                if (newPort !== oldPort) {
+                    console.warn(`[Config] ⚠️  检测到 port 变更 (${oldPort} → ${newPort})，端口变更需要重启服务才能生效`);
                     newConfig.port = oldPort; // 保持原端口
+                    // 从 changes 中移除端口变更（因为它实际上没有生效）
+                    const portChangeIndex = changes.findIndex(c => c.startsWith('port:'));
+                    if (portChangeIndex !== -1) changes.splice(portChangeIndex, 1);
+                    if (changes.length === 0) return; // 只有端口变更时直接返回
                 }
 
                 // 替换全局配置对象（下一次 getConfig() 调用即返回新配置）

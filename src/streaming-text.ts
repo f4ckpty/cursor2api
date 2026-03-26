@@ -98,15 +98,18 @@ export function splitLeadingThinkingBlocks(text: string): LeadingThinkingSplit {
     while (cursor.startsWith(THINKING_OPEN)) {
         const closeIndex = cursor.indexOf(THINKING_CLOSE, THINKING_OPEN.length);
         if (closeIndex === -1) {
-            // ★ 未闭合（截断）：返回截断前已积累的部分 thinking 内容
-            // 当前未闭合块的内容 + 前面已完整的块（如有多个连续 thinking 块的情况）
+            // ★ 未闭合（截断）：thinking 内容取到末尾，但 remainder 应保留 thinking 标签后的原始内容
+            // 这样即使 thinking 未闭合，其后的正文内容（如有）也能被正确处理
             const partialContent = cursor.slice(THINKING_OPEN.length).trim();
             const allParts = [...thinkingParts, ...(partialContent ? [partialContent] : [])];
+            // remainder 是 thinking 标签后的原始内容（可能包含未发送的正文）
+            const remainderStart = cursor.indexOf(THINKING_OPEN) + THINKING_OPEN.length;
+            const remainder = cursor.slice(remainderStart);
             return {
                 startedWithThinking: true,
                 complete: false,
                 thinkingContent: allParts.join('\n\n'),
-                remainder: '',
+                remainder,
             };
         }
 

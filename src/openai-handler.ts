@@ -894,9 +894,16 @@ async function handleOpenAIStream(
                 pushToStreamer(split.remainder);
             } else if (split.startedWithThinking && !split.complete) {
                 // ★ thinking 未闭合（输出被截断在 thinking 阶段）
-                // 提取部分 thinking 内容，不 push 到正文流，避免泄漏
+                // 仍需发送 reasoning_content，然后处理 remainder（可能包含正文）
+                if (thinkingEnabled && split.thinkingContent && !hybridReasoningSent) {
+                    writeOpenAIReasoningDelta(res, id, created, model, split.thinkingContent);
+                    hybridReasoningSent = true;
+                }
                 hybridThinkingContent = split.thinkingContent;
-                // remainder 为空，不 push 任何正文内容
+                // remainder 包含 thinking 后的正文内容，需要推送
+                if (split.remainder) {
+                    pushToStreamer(split.remainder);
+                }
             } else {
                 pushToStreamer(hybridLeadingBuffer);
             }

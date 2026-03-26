@@ -631,13 +631,13 @@ export function deduplicateContinuation(existing: string, continuation: string):
                                 break;
                             }
                         }
-                        if (matchedLines >= 2) {
-                            // 移除续写中匹配的行
+                        // 单行匹配时也去重（截断点可能在行中间，续写时模型重新从该行开始）
+                        if (matchedLines >= 1) {
+                            // 移除续写中匹配的行（matchedLines 行）
                             const deduped = continuationLines.slice(matchedLines).join('\n');
                             // 行级去重记录到详细日志
                             return deduped;
                         }
-                        break;
                     }
                 }
             }
@@ -1318,9 +1318,16 @@ async function handleStream(res: Response, cursorReq: CursorChatRequest, body: A
                 pushToStreamer(split.remainder);
             } else if (split.startedWithThinking && !split.complete) {
                 // ★ thinking 未闭合（输出被截断在 thinking 阶段）
-                // 提取部分 thinking 内容，不 push 到正文流，避免泄漏
+                // 仍需发送 thinking block，然后处理 remainder（可能包含正文）
+                if (clientRequestedThinking && split.thinkingContent && !hybridState.thinkingEmitted) {
+                    emitAnthropicThinkingBlock(res, hybridState, split.thinkingContent);
+                    hybridState.thinkingEmitted = true;
+                }
                 hybridThinkingContent = split.thinkingContent;
-                // remainder 为空，不 push 任何正文内容
+                // remainder 包含 thinking 后的正文内容，需要推送
+                if (split.remainder) {
+                    pushToStreamer(split.remainder);
+                }
             } else {
                 pushToStreamer(hybridLeadingBuffer);
             }

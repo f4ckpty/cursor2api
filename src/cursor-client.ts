@@ -193,17 +193,18 @@ async function sendCursorRequestInner(
                             tagBuffer = tagBuffer.slice(lastTagMatch.index! + lastTagMatch[0].length);
                             for (const m of tagMatches) {
                                 const token = m[0].toLowerCase();
+                                // 每个 token 都与 lastDelta 比较，但连续相同的 token 需要累计计数
                                 if (token === lastDelta) {
                                     repeatCount++;
-                                    if (repeatCount >= REPEAT_THRESHOLD) {
-                                        console.warn(`[Cursor] ⚠️ 检测到 HTML token 重复: "${token}" 已连续重复 ${repeatCount} 次，中止流`);
-                                        htmlRepeatAborted = true;
-                                        reader.cancel();
-                                        break;
-                                    }
                                 } else {
                                     lastDelta = token;
                                     repeatCount = 1;
+                                }
+                                if (repeatCount >= REPEAT_THRESHOLD) {
+                                    console.warn(`[Cursor] ⚠️ 检测到 HTML token 重复: "${token}" 已连续重复 ${repeatCount} 次，中止流`);
+                                    htmlRepeatAborted = true;
+                                    reader.cancel();
+                                    break;
                                 }
                             }
                             if (htmlRepeatAborted) break;

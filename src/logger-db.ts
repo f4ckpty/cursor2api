@@ -101,8 +101,10 @@ function buildWhere(opts: Omit<DbQueryOpts, 'limit'>): { where: string; params: 
         params.status = opts.status;
     }
     if (opts.keyword) {
+        // 转义 LIKE 通配符：% 和 _ 在 SQL LIKE 中有特殊含义
+        const escapedKeyword = opts.keyword.replace(/[%_]/g, '\\$&');
         conditions.push("(request_id LIKE :kw OR json_extract(summary_json,'$.title') LIKE :kw OR json_extract(summary_json,'$.model') LIKE :kw)");
-        params.kw = `%${opts.keyword}%`;
+        params.kw = `%${escapedKeyword}%`;
     }
     const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
     return { where, params };
